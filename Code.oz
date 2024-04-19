@@ -3,7 +3,7 @@ local
    % Please replace this path with your own working directory that contains LethOzLib.ozf
 
    % Dossier = {Property.condGet cwdir '/home/max/FSAB1402/Projet-2017'} % Unix example
-   Dossier = {Property.condGet cwdir 'linfo1104/2024/code/StudentPack/'}
+   Dossier = {Property.condGet cwdir '/Users/mateobauvir/Desktop/UCL/BAC2/Q2/LINFO1104-LethOz-Company-project'}
    % Dossier = {Property.condGet cwdir 'C:\\Users\Thomas\Documents\UCL\Oz\Projet'} % Windows example.
    LethOzLib
 
@@ -31,10 +31,32 @@ in
 %%%%%%%%%%%%%%%%%%%%%%%%
 
    local
-      % Déclarez vos functions ici
-      % Declare your functions here
-      X
+      %Fonctionnalités
+      Outils Instructions Effets
    in
+      Outils = local
+
+         /**
+         * Déplace d'une case vers la direction et s'il est sur le bord 'téléporte'
+         * de l'autre côté.
+         * args: P : position de l'objet
+         *       D : direction du déplacement
+         * returns: nouvelle position après le déplacement.
+         */
+         fun{NextPos P D}
+            case Pos.to
+            of north then
+               if Pos.y == 1 then pos(x:Pos.x y:H to:D)
+               else pos(x:Pos.x y:(Pos.y-1) to:D) end
+            [] west then
+               if Pos.x == 1 then pos(x:W y:Pos.y to:D)
+               else pos(x:(Pos.x-1) y:Pos.y to:D) end
+            [] south then
+               if Pos.y == H then pos(x:Pos.x y:1 to:D)
+               else pos(x:Pos.x y:(Pos.y+1) to:D) end
+            [] east then
+               if Pos.x == W then pos(x:1 y:Pos.y to:D)
+               else pos(x:(Pos.x+1) y:Pos.y to:D) end
       % La fonction qui renvoit les nouveaux attributs du serpent après prise
       % en compte des effets qui l'affectent et de son instruction
       % The function that computes the next attributes of the spaceship given the effects
