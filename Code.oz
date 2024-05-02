@@ -32,7 +32,7 @@ in
 
    local
       %Fonctionnalités
-      Outils Instructions Effets
+      Outils Mouvements Event Effets
    in
       Outils = local
 
@@ -71,11 +71,11 @@ in
             case P.to
             of north then
                pos(x:P.x y:(P.y+1) to:D)
-            of west then
+            [] west then
                pos(x:(P.x+1) y:P.y to:D)
-            of east then
+            [] east then
                pos(x:(P.x-1) y:P.y to:D)
-            of south then
+            [] south then
                post(x:P.x y:(P.y-1) to:D)
             end
          end
@@ -91,7 +91,7 @@ in
             case List
             of nil then MappedList
             [] H|T then 
-               {MapList T F MappedList@[{F H}]}
+               {F H}|{MapList T F MappedList}
             end
          end
 
@@ -139,7 +139,8 @@ in
          */
          fun{Repeat N Elem}
             if N==0 then nil
-            else then Elem|{Repeat N-1 Elem} end
+            else Elem | {Repeat N-1 Elem}
+            end
          end
       in
          utils(postPos : PostPos
@@ -149,6 +150,80 @@ in
                repeat : Repeat
                )
       end
+
+      /**
+      Event = local
+         State ={NouvelEtat}
+         Events = [
+            event(name: "Attaque d'un vaisseau pirate", effect: {State.increaseEnnemyThreat 1}),
+            event(name: "Mysterieuse anomalie", effect: {State.randomTeleport}),
+            event(name: "Signaux de détresse", effect: {State.addMission "Operation sauvatage"})
+            ]
+      end
+      */
+
+      Mouvements = local
+         
+         /**
+         * Fait avancer le vaisseau dans la direction actuelle 
+         * args: Spaceship : Le vaisseau spacial à faire avancer
+         * returns: Spaceship : Le vaisseau bougé
+         */
+         fun{Forward S}
+            declare ForwardShipNormally
+            % Fonction locale pour avancer d'une position dans la direction donnée
+            fun{ForwardShipNormally PrePos P}
+               % direction actuelle
+               D = if PrePos == nil then P.to else PrePos.to end
+
+               % calcule de la nouvelle position
+               if PrePos == nil then % == si c'est la tete du vaisseau
+                  {utils.postPos P D}
+               else
+                  PrePos
+               end
+            end
+            % Vérifie si le vaisseau à un effet wormhole
+            if{HasFeature S wormhole} then
+               % Si trou de ver on récupère les coordonnées du trou
+               X = (S.wormhole).1
+               Y = (S.wormhole).2
+               % Téléporte le vaisseau à la nouvelle position
+               {UpdateShipAfterTeleport S X Y}
+            else
+               {ForwardShipNormally S}
+            end
+         end
+
+         /**
+         * Fonction locale pour vérifier si un vaisseau a une fonctionnalité
+         * args: Ship : vaisseau spaciale actuel
+         *       Feature : fonctionnalité
+         * returns : true si Ship possède la fonctionnalité
+         *           false sinon
+         */
+         fun{HasFeature Ship Feature}
+            {List.exists Ship.effects fun{$ Effect}{Value.hasFeature Effect Feature} end}
+         end
+
+         /**
+         * Fonction locale pour mettre à jour la position du vaisseau après une tp
+         * args: Ship : vaisseau spaciale actuel
+         *       X : Coordonnée X où le vaisseau doit être téléporté
+         *       Y : Coordonnée Y où le vaisseau doit être téléporté
+         */
+         fun{UpdateShipAfterTeleport Ship X Y}
+            {MapList Ship.positions fun{$ P} pos(x:X y:Y to:P.to) end nil}
+         end
+      in
+         mouvements(
+            forward : Forward
+         )
+      end
+
+            
+
+
 
       % La fonction qui renvoit les nouveaux attributs du serpent après prise
       % en compte des effets qui l'affectent et de son instruction
@@ -171,6 +246,7 @@ in
          Spaceship
       end
 
+      
       
       % La fonction qui décode la stratégie d'un serpent en une liste de fonctions. Chacune correspond
       % à un instant du jeu et applique l'instruction devant être exécutée à cet instant au spaceship
