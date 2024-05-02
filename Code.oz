@@ -37,26 +37,119 @@ in
       Outils = local
 
          /**
-         * Déplace d'une case vers la direction et s'il est sur le bord 'téléporte'
+         * Déplace d'une case dans la direction D et s'il sort des limites du plateau il réapparait
          * de l'autre côté.
-         * args: P : position de l'objet
+         * args: P : position du vaisseau
          *       D : direction du déplacement
          * returns: nouvelle position après le déplacement.
          */
-         fun{NextPos P D}
-            case Pos.to
+         fun{PostPos P D}
+            case P.to
             of north then
-               if Pos.y == 1 then pos(x:Pos.x y:H to:D)
-               else pos(x:Pos.x y:(Pos.y-1) to:D) end
+               if P.y == 1 then pos(x:P.x y:H to:D)
+               else pos(x:P.x y:(P.y-1) to:D) end
             [] west then
-               if Pos.x == 1 then pos(x:W y:Pos.y to:D)
-               else pos(x:(Pos.x-1) y:Pos.y to:D) end
+               if P.x == 1 then pos(x:W y:P.y to:D)
+               else pos(x:(P.x-1) y:P.y to:D) end
             [] south then
-               if Pos.y == H then pos(x:Pos.x y:1 to:D)
-               else pos(x:Pos.x y:(Pos.y+1) to:D) end
+               if P.y == H then pos(x:P.x y:1 to:D)
+               else pos(x:P.x y:(P.y+1) to:D) end
             [] east then
-               if Pos.x == W then pos(x:1 y:Pos.y to:D)
-               else pos(x:(Pos.x+1) y:Pos.y to:D) end
+               if P.x == W then pos(x:1 y:P.y to:D)
+               else pos(x:(P.x+1) y:P.y to:D) end
+            end
+         end
+
+         /**
+         * Calcule la position précédente du vaisseau avant d'avancer dans la direction opposée
+         * à celle donnée par la direction D
+         * args : P : position actuelle du vaisseau
+         *        D : direction du vaisseau
+         * returns : position précédente du vaisseau avant d'avancer dans la direction opposée 
+         */
+         fun{PrePos P D}
+            case P.to
+            of north then
+               pos(x:P.x y:(P.y+1) to:D)
+            of west then
+               pos(x:(P.x+1) y:P.y to:D)
+            of east then
+               pos(x:(P.x-1) y:P.y to:D)
+            of south then
+               post(x:P.x y:(P.y-1) to:D)
+            end
+         end
+         
+         /**
+         * Applique récursivement la fonction F à chaque élément d'une liste List
+         * args: List : Liste d'éléments
+         *       F : Fonction à appliquer à chaque élément de la liste
+         *       MappedList : Accumulateur
+         * returns: Nouvelle liste mappée
+         */
+         fun{MapList List F MappedList}
+            case List
+            of nil then MappedList
+            [] H|T then 
+               {MapList T F MappedList@[{F H}]}
+            end
+         end
+
+         /**
+         * Calcule la nouvelle direction après un virage (left, right ou revert)
+         * à partir de la direction actuelle D.
+         * args: D: Direction actuelle du vaisseau
+         *       V: Sens du virage
+         * returns: Nouvelle direction du vaisseau après avoir tourné
+         * */
+         fun{NewDirection D V}
+            case D
+            of north then
+               case V
+               of left then west
+               [] right then east
+               [] revert then south
+               end
+            [] west then
+               case V
+               of left then south
+               [] right then north
+               [] revert then east
+               end
+            [] south then
+               case V
+               of left then east
+               [] right then west
+               [] revert then north
+               end
+            [] east then
+               case V
+               of left then north
+               [] right then south
+               [] revert then west
+               end
+            end
+         end
+         
+         /**
+         * Crée une liste de N fois un élément Elem.
+         * args: N : Nombre de répétitions.
+         *       E : Elément à répéter.
+         * returns: Une liste contenant N fois l'élément Elem.
+         */
+         fun{Repeat N Elem}
+            if N==0 then nil
+            else then Elem|{Repeat N-1 Elem} end
+         end
+      in
+         utils(postPos : PostPos
+               prePos : PrePos
+               map : MapList
+               newDir : NewDirection
+               repeat : Repeat
+               )
+      end
+
       % La fonction qui renvoit les nouveaux attributs du serpent après prise
       % en compte des effets qui l'affectent et de son instruction
       % The function that computes the next attributes of the spaceship given the effects
